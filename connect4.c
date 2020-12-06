@@ -1,4 +1,5 @@
 #include<stdio.h>
+#include<stdlib.h>
 #include"connect4.h"
 
 struct board_structure {
@@ -18,7 +19,35 @@ void cleanup_board(board u){
 }
 
 void read_in_file(FILE *infile, board u){
+	char buffer[520];
+	int count = 0;
+	int rows = 6;
+	int cols = 8;
+	char board_struc[rows][cols];
+	int curr_row = 0;
+	int curr_col = 0;
+	FILE *infile=fopen("initial_board.txt","r");
 
+	while(!feof(infile)){
+		fscanf(infile, "%c", &buffer[count]);
+		if(buffer[count] == '.' || buffer[count] == 'x' || buffer[count] == 'o'){
+			if(curr_col == cols){
+				curr_row++;
+				curr_col=0;
+			}
+			board_struc[curr_row][curr_col] = buffer[count];
+			curr_col++;
+		}
+		count++;
+	}
+	
+	for(int i = 0; i < rows; i++){
+		printf("\n");
+		for(int j = 0; j < cols; j++){
+			printf("%c", board_struc[i][j]);
+		}
+	}
+	printf("\n\n");
 }
 
 void write_out_file(FILE *outfile, board u){

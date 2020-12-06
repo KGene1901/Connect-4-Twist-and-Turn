@@ -21,33 +21,57 @@ void cleanup_board(board u){
 void read_in_file(FILE *infile, board u){
 	char buffer[520];
 	int count = 0;
-	int rows = 6;
-	int cols = 8;
-	char board_struc[rows][cols];
+	int max_rows = 1;
+	int max_cols = 4;
+	char **board_ptr;
 	int curr_row = 0;
 	int curr_col = 0;
+	int first_loop = 1;
 	FILE *infile=fopen("initial_board.txt","r");
+	
+	board_ptr = (char**)malloc(1 * sizeof(char*)); // min 1 row 
+	board_ptr[0] = (char*)malloc(4 * sizeof(char)); // min 4 cols
 
 	while(!feof(infile)){
+		if(curr_row == max_rows){
+			board_ptr = (char**)realloc(board_ptr, (max_rows+1)*sizeof(*board_ptr));
+			if(board_ptr == NULL){
+				exit(1);
+			}
+			max_rows++;
+			board_ptr[curr_row] = (char*)malloc(max_cols*sizeof(char));
+		}
 		fscanf(infile, "%c", &buffer[count]);
 		if(buffer[count] == '.' || buffer[count] == 'x' || buffer[count] == 'o'){
-			if(curr_col == cols){
-				curr_row++;
-				curr_col=0;
+			if(curr_col == max_cols){
+				board_ptr[curr_row] = (char*)realloc(board_ptr[curr_row], (max_cols+1)*sizeof(char));
+				if(board_ptr[curr_row] == NULL){
+					exit(1);
+				}
+				max_cols++;
 			}
-			board_struc[curr_row][curr_col] = buffer[count];
+			board_ptr[curr_row][curr_col] = buffer[count];
 			curr_col++;
+		}else{
+			curr_row++;
+			curr_col = 0;
 		}
 		count++;
 	}
-	
-	for(int i = 0; i < rows; i++){
-		printf("\n");
-		for(int j = 0; j < cols; j++){
-			printf("%c", board_struc[i][j]);
-		}
-	}
-	printf("\n\n");
+
+	max_rows--;
+
+
+	// for(int i = 0; i < max_rows; i++){
+	// 	printf("\n");
+	// 	for(int j = 0; j < max_cols; j++){
+	// 		printf("%c", board_ptr[i][j]);
+	// 	}
+	// }
+	// printf("\n\n");
+	// printf("Total rows: %d  Total columns: %d\n", max_rows, max_cols);
+
+	fclose(infile);
 }
 
 void write_out_file(FILE *outfile, board u){

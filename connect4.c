@@ -2,7 +2,7 @@
 #include<stdlib.h>
 #include"connect4.h"
 
-struct board_structure {
+struct board_structure{
 	char **board_ptr;
 	int max_rows;
 	int max_cols;
@@ -32,21 +32,13 @@ board setup_board(){
 // //You may put code here
 // }
 
-void print_board(board u){
-	for(int x = 0; x < u->max_rows; x++){
-		printf("\n");
-		for(int y = 0; y < u->max_cols; y++){
-			printf("%c", (u->board_ptr)[x][y]);
-		}
-	}
-	printf("\n\n");
-}
-
 void read_in_file(FILE *infile, board u){
 	char buffer[520]; // need to realloc this somewhere just in case
 	int count = 0;
 	int curr_row = 0;
 	int curr_col = 0;
+	u->num_of_x = 0;
+	u->num_of_o = 0;
 	
 	while(!feof(infile)){
 		if(curr_row == u->max_rows){
@@ -67,6 +59,11 @@ void read_in_file(FILE *infile, board u){
 				u->max_cols++;
 			}
 			(u->board_ptr)[curr_row][curr_col] = buffer[count];
+			if(buffer[count] == 'x'){
+				(u->num_of_x)++;
+			}else if(buffer[count] == 'o'){
+				(u->num_of_o)++;
+			}
 			curr_col++;
 		}else{
 			curr_row++;
@@ -79,48 +76,99 @@ void read_in_file(FILE *infile, board u){
 }
 
 void write_out_file(FILE *outfile, board u){
-//You may put code here
+	
+	for(int x = 0; x < u->max_rows; x++){
+		fprintf(outfile, "\n");
+		for(int y = 0; y < u->max_cols; y++){
+			fprintf(outfile, "%c", (u->board_ptr)[x][y]);
+		}
+	}
+	fprintf(outfile, "\n\n");
 }
 
 char next_player(board u){
-	if(u->num_of_x == 0 && u->num_of_o == 0) return "x";
+	if(u->num_of_x == 0 && u->num_of_o == 0) return 'x';
 	if(u->num_of_x > u->num_of_o){
-		return "o";
+		return 'o';
 	}else{
-		return "x";
+		return 'x';
 	}
 }
 
-// char current_winner(board u){
-// //You may put code here
-// }
+char current_winner(board u){
+	// char player;
+	// if(u->num_of_x == 0 && u->num_of_o == 0) return '.';
+	// for(int x = 0; x < u->max_rows; x++){
+	// 	for(int y = 0; y < u->max_cols; y++){
+	// 		if((u->board_ptr)[x][y] != '.'){
+
+	// 		} 
+	// 	}
+	// }
+	return '.';
+}
 
 struct move read_in_move(board u){
-	struct move{
-		int chosen_col;
-		int chosen_rotation;
-	};
-
-	struct player_move = malloc(sizeof(struct move));
+	struct move player_move;
 	printf("Player %c enter column to place your token: ",next_player(u)); //Do not edit this line
-	scanf("%d", &(player_move->chosen_col));
+	scanf("%d", &(player_move.column));
 	printf("Player %c enter row to rotate: ",next_player(u)); // Do not edit this line
-	scanf("%d", &(player_move->chosen_rotation));
-
+	scanf("%d", &(player_move.row));
+	
 	return player_move;
 }
 
 int is_valid_move(struct move m, board u){
-	if (m->chosen_col < 1 || m->chosen_col > u->max_cols || m->chosen_rotation < -(u->max_rows) || m->chosen_rotation > u->max_rows) return 0;
-	if ((u->board_ptr)[0][(m->chosen_col)-1] == ".") return 0;
+	if (m.column < 1 || m.column > u->max_cols || m.row < -(u->max_rows) || m.row > u->max_rows) return 0;
+	if ((u->board_ptr)[0][(m.column)-1] == '.') return 1;
 }
 
 // char is_winning_move(struct move m, board u){
 // //You may put code here
 // }
 
-// void play_move(struct move m, board u){
-// //You may put code here
-// }
+// char gravity_check()
 
+void play_move(struct move m, board u){
+	// rows 1,2 ... bottom to top
+	// column 1,2 ... left to right
+	int possible_row;
+	int row_selected = u->max_rows - abs(m.row);
+	char current_token;
+	char prev_token;
+	for(int x = 0; x < u->max_rows; x++){
+		if((u->board_ptr)[x][(m.column)-1] == '.'){
+				possible_row = x;
+		}else{
+			break;
+		}
+	}
+	(u->board_ptr)[possible_row][(m.column)-1] = next_player(u); // inserts next player's chip into the proper column
+	if(next_player(u) == 'x'){
+		(u->num_of_x)++;
+	}else{
+		(u->num_of_o)++;
+	}
 
+	if(m.row > 0){
+		prev_token = (u->board_ptr)[row_selected][0];
+		for(int y = 1; y < u->max_cols; y++){
+			current_token = (u->board_ptr)[row_selected][y];
+			(u->board_ptr)[row_selected][y] = prev_token;
+			prev_token = current_token;
+			if(y == (u->max_cols) - 1){
+				(u->board_ptr)[row_selected][0] = prev_token;
+			}
+		}
+	}else if(m.row < 0){
+		prev_token = (u->board_ptr)[row_selected][(u->max_cols) - 1];
+		for(int y = (u->max_cols) - 2; y >= 0; y--){
+			current_token = (u->board_ptr)[row_selected][y];
+			(u->board_ptr)[row_selected][y] = prev_token;
+			prev_token = current_token;
+			if(y == 0){
+				(u->board_ptr)[row_selected][(u->max_cols) - 1] = prev_token;
+			}
+		}
+	}
+}

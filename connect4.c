@@ -127,13 +127,13 @@ int is_valid_move(struct move m, board u){
 // //You may put code here
 // }
 
-// char gravity_check()
-
+// this works but neeeds some code clean up 
 void play_move(struct move m, board u){
 	// rows 1,2 ... bottom to top
 	// column 1,2 ... left to right
-	int possible_row;
 	int row_selected = u->max_rows - abs(m.row);
+	int possible_row;
+	int count = 1;
 	char current_token;
 	char prev_token;
 	for(int x = 0; x < u->max_rows; x++){
@@ -143,32 +143,55 @@ void play_move(struct move m, board u){
 			break;
 		}
 	}
-	(u->board_ptr)[possible_row][(m.column)-1] = next_player(u); // inserts next player's chip into the proper column
+	(u->board_ptr)[possible_row][(m.column)-1] = next_player(u); // inserts next player's token into the proper column
 	if(next_player(u) == 'x'){
 		(u->num_of_x)++;
 	}else{
 		(u->num_of_o)++;
 	}
 
-	if(m.row > 0){
-		prev_token = (u->board_ptr)[row_selected][0];
-		for(int y = 1; y < u->max_cols; y++){
-			current_token = (u->board_ptr)[row_selected][y];
-			(u->board_ptr)[row_selected][y] = prev_token;
-			prev_token = current_token;
-			if(y == (u->max_cols) - 1){
-				(u->board_ptr)[row_selected][0] = prev_token;
+	if(m.row != 0){
+		if(m.row > 0){ // right rotation
+			prev_token = (u->board_ptr)[row_selected][0];
+			for(int y = 1; y < u->max_cols; y++){
+				current_token = (u->board_ptr)[row_selected][y];
+				(u->board_ptr)[row_selected][y] = prev_token;
+				prev_token = current_token;
+				if(y == (u->max_cols) - 1){
+					(u->board_ptr)[row_selected][0] = prev_token;
+				}
+			}
+		}else if(m.row < 0){ // left rotation
+			prev_token = (u->board_ptr)[row_selected][(u->max_cols) - 1];
+			for(int y = (u->max_cols) - 2; y >= 0; y--){
+				current_token = (u->board_ptr)[row_selected][y];
+				(u->board_ptr)[row_selected][y] = prev_token;
+				prev_token = current_token;
+				if(y == 0){
+					(u->board_ptr)[row_selected][(u->max_cols) - 1] = prev_token;
+				}
 			}
 		}
-	}else if(m.row < 0){
-		prev_token = (u->board_ptr)[row_selected][(u->max_cols) - 1];
-		for(int y = (u->max_cols) - 2; y >= 0; y--){
-			current_token = (u->board_ptr)[row_selected][y];
-			(u->board_ptr)[row_selected][y] = prev_token;
-			prev_token = current_token;
-			if(y == 0){
-				(u->board_ptr)[row_selected][(u->max_cols) - 1] = prev_token;
+
+		possible_row = row_selected;
+		for(int x = row_selected; x >= 0; x--){	// applying logic of gravity for tokens falling
+			for(int y = 0; y < u->max_cols; y++){
+				if(((u->board_ptr)[x][y] == 'x' || (u->board_ptr)[x][y] == 'o') && x + count < u->max_rows){
+					while((u->board_ptr)[x+count][y] == '.'){
+						if((x + count) >= ((u->max_rows))){
+							break;
+						}
+						possible_row = x + count;
+						count++;
+					}
+					if(possible_row != row_selected){
+						(u->board_ptr)[possible_row][y] = (u->board_ptr)[x][y];
+						(u->board_ptr)[x][y] = '.';
+					}
+				}
 			}
 		}
 	}
 }
+
+

@@ -8,6 +8,7 @@ struct board_structure{
 	int max_cols;
 	int num_of_x;
 	int num_of_o;
+	
 };
 
 board setup_board(){
@@ -87,24 +88,111 @@ void write_out_file(FILE *outfile, board u){
 }
 
 char next_player(board u){
-	if(u->num_of_x == 0 && u->num_of_o == 0) return 'x';
-	if(u->num_of_x > u->num_of_o){
-		return 'o';
-	}else{
+	if(u->num_of_x <= u->num_of_o){
 		return 'x';
+	}else{
+		return 'o';
 	}
 }
 
 char current_winner(board u){
-	// char player;
-	// if(u->num_of_x == 0 && u->num_of_o == 0) return '.';
-	// for(int x = 0; x < u->max_rows; x++){
-	// 	for(int y = 0; y < u->max_cols; y++){
-	// 		if((u->board_ptr)[x][y] != '.'){
+	int x_is_winner = 0;
+	int o_is_winner = 0;
+	if(u->num_of_x == 0 && u->num_of_o == 0) return '.';
+	for(int x = u->max_rows - 1; x >= 0; x--){
+		for(int y = 0; y < u->max_cols; y++){
+			if((u->board_ptr)[x][y] != '.'){
 
-	// 		} 
-	// 	}
-	// }
+				// up
+				if(((u->board_ptr)[x-1][y] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x-2][y] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x-3][y] == (u->board_ptr)[x][y])){
+					if((u->board_ptr)[x][y] == 'x'){
+						x_is_winner = 1;
+					}else{
+						o_is_winner = 1;
+					}
+					break;
+				}
+
+				//down
+				if(((u->board_ptr)[x+1][y] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x+2][y] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x+3][y] == (u->board_ptr)[x][y])){
+					if((u->board_ptr)[x][y] == 'x'){
+						x_is_winner = 1;
+					}else{
+						o_is_winner = 1;
+					}
+					break;
+				}
+
+				// right
+				if(((u->board_ptr)[x][y+1] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x][y+2] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x][y+3] == (u->board_ptr)[x][y])){
+					if((u->board_ptr)[x][y] == 'x'){
+						x_is_winner = 1;
+					}else{
+						o_is_winner = 1;
+					}
+					break;
+				}
+
+				// left
+				if(((u->board_ptr)[x][y-1] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x][y-2] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x][y-3] == (u->board_ptr)[x][y])){
+					if((u->board_ptr)[x][y] == 'x'){
+						x_is_winner = 1;
+					}else{
+						o_is_winner = 1;
+					}
+					break;
+				}
+
+				// top left
+				if(((u->board_ptr)[x-1][y-1] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x-2][y-2] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x-3][y-3] == (u->board_ptr)[x][y])){
+					if((u->board_ptr)[x][y] == 'x'){
+						x_is_winner = 1;
+					}else{
+						o_is_winner = 1;
+					}
+					break;
+				}
+
+				// top right
+				if(((u->board_ptr)[x-1][y+1] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x-2][y+2] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x-3][y+3] == (u->board_ptr)[x][y])){
+					if((u->board_ptr)[x][y] == 'x'){
+						x_is_winner = 1;
+					}else{
+						o_is_winner = 1;
+					}
+					break;
+				}
+
+				// bottom left
+				if(((u->board_ptr)[x+1][y-1] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x+2][y-2] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x+3][y-3] == (u->board_ptr)[x][y])){
+					if((u->board_ptr)[x][y] == 'x'){
+						x_is_winner = 1;
+					}else{
+						o_is_winner = 1;
+					}
+					break;
+				}
+
+				// bottom right
+				if(((u->board_ptr)[x+1][y+1] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x+2][y+2] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x+3][y+3] == (u->board_ptr)[x][y])){
+					if((u->board_ptr)[x][y] == 'x'){
+						x_is_winner = 1;
+					}else{
+						o_is_winner = 1;
+					}
+					break;
+				}
+			}
+		}
+	}
+
+	if(x_is_winner && o_is_winner){
+		return 'd';
+	}else if(x_is_winner){
+		return 'x';
+	}else if(o_is_winner){
+		return 'o';
+	}
 	return '.';
 }
 
@@ -121,6 +209,7 @@ struct move read_in_move(board u){
 int is_valid_move(struct move m, board u){
 	if (m.column < 1 || m.column > u->max_cols || m.row < -(u->max_rows) || m.row > u->max_rows) return 0;
 	if ((u->board_ptr)[0][(m.column)-1] == '.') return 1;
+	exit(1);
 }
 
 // char is_winning_move(struct move m, board u){
@@ -184,7 +273,8 @@ void play_move(struct move m, board u){
 						possible_row = x + count;
 						count++;
 					}
-					if(possible_row != row_selected){
+
+					if(possible_row != x){
 						(u->board_ptr)[possible_row][y] = (u->board_ptr)[x][y];
 						(u->board_ptr)[x][y] = '.';
 					}
@@ -193,5 +283,3 @@ void play_move(struct move m, board u){
 		}
 	}
 }
-
-

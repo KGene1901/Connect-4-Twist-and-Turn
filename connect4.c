@@ -8,7 +8,6 @@ struct board_structure{
 	int max_cols;
 	int num_of_x;
 	int num_of_o;
-	
 };
 
 board setup_board(){
@@ -29,9 +28,14 @@ board setup_board(){
 	return board_to_play;
 }
 
-// void cleanup_board(board u){
-// //You may put code here
-// }
+void cleanup_board(board u){
+	// for(int x = 0; x < u->max_rows; x++){
+	// 	free(u->board_ptr[x]);
+	// }
+	free(u->board_ptr);
+	free(u);
+	// need to fix errors showing on Valgrind
+}
 
 void read_in_file(FILE *infile, board u){
 	char buffer[520]; // need to realloc this somewhere just in case
@@ -79,10 +83,10 @@ void read_in_file(FILE *infile, board u){
 void write_out_file(FILE *outfile, board u){
 	
 	for(int x = 0; x < u->max_rows; x++){
-		fprintf(outfile, "\n");
 		for(int y = 0; y < u->max_cols; y++){
 			fprintf(outfile, "%c", (u->board_ptr)[x][y]);
 		}
+		fprintf(outfile, "\n");
 	}
 	fprintf(outfile, "\n\n");
 }
@@ -98,22 +102,17 @@ char next_player(board u){
 char current_winner(board u){
 	int x_is_winner = 0;
 	int o_is_winner = 0;
+	int empty_space = 0;
+	int pos_x, pos_y, count;
 	if(u->num_of_x == 0 && u->num_of_o == 0) return '.';
 	for(int x = u->max_rows - 1; x >= 0; x--){
+		if(x_is_winner && o_is_winner) break;
 		for(int y = 0; y < u->max_cols; y++){
 			if((u->board_ptr)[x][y] != '.'){
 
-				// up
-				if(((u->board_ptr)[x-1][y] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x-2][y] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x-3][y] == (u->board_ptr)[x][y])){
-					if((u->board_ptr)[x][y] == 'x'){
-						x_is_winner = 1;
-					}else{
-						o_is_winner = 1;
-					}
-					break;
-				}
+				if((x_is_winner && (u->board_ptr)[x][y] == 'x') || (o_is_winner && (u->board_ptr)[x][y] == 'o')) continue;
 
-				//down
+				// down
 				if(((u->board_ptr)[x+1][y] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x+2][y] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x+3][y] == (u->board_ptr)[x][y])){
 					if((u->board_ptr)[x][y] == 'x'){
 						x_is_winner = 1;
@@ -123,70 +122,72 @@ char current_winner(board u){
 					break;
 				}
 
-				// right
-				if(((u->board_ptr)[x][y+1] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x][y+2] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x][y+3] == (u->board_ptr)[x][y])){
-					if((u->board_ptr)[x][y] == 'x'){
-						x_is_winner = 1;
+				// // right
+				pos_y = y;
+				count = 0;
+				for(int i = 0; i < 4; i++){
+					if(pos_y >= u->max_cols) pos_y = 0;
+					if((u->board_ptr)[x][pos_y] == (u->board_ptr)[x][y]){
+						count++;
+						pos_y++;
 					}else{
-						o_is_winner = 1;
+						break;
 					}
-					break;
+				}
+				if((u->board_ptr)[x][y] == 'x' && count ==4){
+					x_is_winner = 1;
+				}else if((u->board_ptr)[x][y] == 'o' && count ==4){
+					o_is_winner = 1;
+				}
+			
+				// // diagonal down right
+				pos_x = x;
+				pos_y = y;
+				count = 0;
+				for(int i = 0; i < 4; i++){
+					if(pos_y >= u->max_cols) pos_y = 0;
+					if(pos_x >= u->max_rows) break;
+					if((u->board_ptr)[pos_x][pos_y] == (u->board_ptr)[x][y]){
+						count++;
+						pos_x++;
+						pos_y++;
+					}else{
+						break;
+					}
+				}
+				if((u->board_ptr)[x][y] == 'x' && count ==4){
+					x_is_winner = 1;
+				}else if((u->board_ptr)[x][y] == 'o' && count ==4){
+					o_is_winner = 1;
 				}
 
-				// left
-				if(((u->board_ptr)[x][y-1] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x][y-2] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x][y-3] == (u->board_ptr)[x][y])){
-					if((u->board_ptr)[x][y] == 'x'){
-						x_is_winner = 1;
+				// diagonal up right
+				pos_x = x;
+				pos_y = y;
+				count = 0;
+				for(int i = 0; i < 4; i++){
+					if(pos_y >= u->max_cols) pos_y = 0;
+					if(pos_x >= u->max_rows) break;
+					if((u->board_ptr)[pos_x][pos_y] == (u->board_ptr)[x][y]){
+						count++;
+						pos_x--;
+						pos_y++;
 					}else{
-						o_is_winner = 1;
+						break;
 					}
-					break;
+				}
+				if((u->board_ptr)[x][y] == 'x' && count ==4){
+					x_is_winner = 1;
+				}else if((u->board_ptr)[x][y] == 'o' && count ==4){
+					o_is_winner = 1;
 				}
 
-				// top left
-				if(((u->board_ptr)[x-1][y-1] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x-2][y-2] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x-3][y-3] == (u->board_ptr)[x][y])){
-					if((u->board_ptr)[x][y] == 'x'){
-						x_is_winner = 1;
-					}else{
-						o_is_winner = 1;
-					}
-					break;
-				}
-
-				// top right
-				if(((u->board_ptr)[x-1][y+1] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x-2][y+2] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x-3][y+3] == (u->board_ptr)[x][y])){
-					if((u->board_ptr)[x][y] == 'x'){
-						x_is_winner = 1;
-					}else{
-						o_is_winner = 1;
-					}
-					break;
-				}
-
-				// bottom left
-				if(((u->board_ptr)[x+1][y-1] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x+2][y-2] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x+3][y-3] == (u->board_ptr)[x][y])){
-					if((u->board_ptr)[x][y] == 'x'){
-						x_is_winner = 1;
-					}else{
-						o_is_winner = 1;
-					}
-					break;
-				}
-
-				// bottom right
-				if(((u->board_ptr)[x+1][y+1] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x+2][y+2] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x+3][y+3] == (u->board_ptr)[x][y])){
-					if((u->board_ptr)[x][y] == 'x'){
-						x_is_winner = 1;
-					}else{
-						o_is_winner = 1;
-					}
-					break;
-				}
 			}
+			empty_space++;
 		}
 	}
 
-	if(x_is_winner && o_is_winner){
+	if((x_is_winner && o_is_winner) || (!x_is_winner && !o_is_winner && empty_space == 0)){
 		return 'd';
 	}else if(x_is_winner){
 		return 'x';
@@ -213,7 +214,7 @@ int is_valid_move(struct move m, board u){
 }
 
 // char is_winning_move(struct move m, board u){
-// //You may put code here
+// 	return '.';
 // }
 
 // this works but neeeds some code clean up 
@@ -262,24 +263,22 @@ void play_move(struct move m, board u){
 			}
 		}
 
-		possible_row = row_selected;
-		for(int x = row_selected; x >= 0; x--){	// applying logic of gravity for tokens falling
+		for(int x = (u->max_rows)-1; x >= 0; x--){	// applying logic of gravity for tokens falling
 			for(int y = 0; y < u->max_cols; y++){
-				if(((u->board_ptr)[x][y] == 'x' || (u->board_ptr)[x][y] == 'o') && x + count < u->max_rows){
-					while((u->board_ptr)[x+count][y] == '.'){
-						if((x + count) >= ((u->max_rows))){
-							break;
-						}
-						possible_row = x + count;
+				count = 1;
+				if((u->board_ptr)[x][y] == 'x' || (u->board_ptr)[x][y] == 'o'){
+					current_token = (u->board_ptr)[x][y];
+					possible_row = x;
+					while(((u->board_ptr)[x+count][y] == '.') && (x+count < u->max_rows)){
+						(u->board_ptr)[x][y] = '.';
+						possible_row = x+count;
 						count++;
 					}
-
-					if(possible_row != x){
-						(u->board_ptr)[possible_row][y] = (u->board_ptr)[x][y];
-						(u->board_ptr)[x][y] = '.';
-					}
+					(u->board_ptr)[possible_row][y] = current_token;
 				}
 			}
 		}
 	}
 }
+
+

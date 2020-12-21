@@ -6,8 +6,10 @@ struct board_structure{
 	char **board_ptr;
 	int max_rows;
 	int max_cols;
-	int num_of_x;
+	int num_of_x; // these two can be cut down imo
 	int num_of_o;
+	int *win_x;
+	int *win_o;
 };
 
 board setup_board(){
@@ -15,16 +17,38 @@ board setup_board(){
 	if (board_to_play == NULL){
 		exit(1);
 	}
+
 	board_to_play->max_rows = 1;
 	board_to_play->max_cols = 4;
+
+	board_to_play->win_x = (int*)malloc(3*sizeof(int));
+	if(board_to_play->win_x == NULL){
+		exit(1);
+	}
+
+	(board_to_play->win_x)[0] = 0;
+	(board_to_play->win_x)[1] = 0;
+	(board_to_play->win_x)[2] = 0;
+
+	board_to_play->win_o = (int*)malloc(3*sizeof(int));
+	if(board_to_play->win_o == NULL){
+		exit(1);
+	}
+
+	(board_to_play->win_o)[0] = 0;
+	(board_to_play->win_o)[1] = 0;
+	(board_to_play->win_o)[2] = 0;
+
 	board_to_play->board_ptr = (char**)malloc((board_to_play->max_rows) * sizeof(char*)); // min 1 row 
 	if(board_to_play->board_ptr == NULL){
 		exit(1);
 	}
+
 	(board_to_play->board_ptr)[0] = (char*)malloc((board_to_play->max_cols) * sizeof(char)); // min 4 cols
 	if((board_to_play->board_ptr)[0] == NULL){
 		exit(1);
 	}
+	
 	return board_to_play;
 }
 
@@ -81,7 +105,89 @@ void read_in_file(FILE *infile, board u){
 }
 
 void write_out_file(FILE *outfile, board u){
-	
+
+	if((u->win_x)[0] != 0 && (u->win_x)[1] != 0){
+
+		// down
+		if((u->win_x)[2] == 1){
+			for(int i = (u->win_x)[0]; i<=(u->win_x)[0]+3; i++){
+				(u->board_ptr)[i][(u->win_x)[1]] = 'X';
+			}
+		}
+
+		// right
+		if((u->win_x)[2] == 2){
+			for(int i = 0; i < 4; i++){
+				if((u->win_x)[1] >= u->max_cols) (u->win_x)[1] = 0;
+				(u->board_ptr)[(u->win_x)[0]][(u->win_x)[1]] = 'X';
+				(u->win_x)[1]++;
+			}
+		}
+
+		// diagonal up right
+		if((u->win_x)[2] == 3){
+			for(int i = 0; i < 4; i++){
+				if((u->win_x)[1] >= u->max_cols) (u->win_x)[1] = 0;
+				if((u->win_x)[0] >= u->max_rows) break;
+				(u->board_ptr)[(u->win_x)[0]][(u->win_x)[1]] = 'X';
+				(u->win_x)[0]--;
+				(u->win_x)[1]++;
+			}
+		}
+
+		// diagonal down right
+		if((u->win_x)[2] == 4){
+			for(int i = 0; i < 4; i++){
+				if((u->win_x)[1] >= u->max_cols) (u->win_x)[1] = 0;
+				if((u->win_x)[0] >= u->max_rows) break;
+				(u->board_ptr)[(u->win_x)[0]][(u->win_x)[1]] = 'X';
+				(u->win_x)[0]++;
+				(u->win_x)[1]++;
+			}
+		}
+	}
+
+	if(((u->win_o)[0] != 0 && (u->win_o)[1] != 0)){
+		// down
+		if((u->win_o)[2] == 1){
+			for(int i = (u->win_o)[0]; i<=(u->win_o)[0]+3; i++){
+				(u->board_ptr)[i][(u->win_o)[1]] = 'X';
+			}
+		}
+
+		// right
+		if((u->win_o)[2] == 2){
+			for(int i = 0; i < 4; i++){
+				if((u->win_o)[1] >= u->max_cols) (u->win_o)[1] = 0;
+				(u->board_ptr)[(u->win_o)[0]][(u->win_o)[1]] = 'X';
+				(u->win_o)[1]++;
+			}
+		}
+
+		// diagonal up right
+		if((u->win_o)[2] == 3){
+			for(int i = 0; i < 4; i++){
+				if((u->win_o)[1] >= u->max_cols) (u->win_o)[1] = 0;
+				if((u->win_o)[0] >= u->max_rows) break;
+				(u->board_ptr)[(u->win_o)[0]][(u->win_o)[1]] = 'X';
+				(u->win_o)[0]--;
+				(u->win_o)[1]++;
+			}
+		}
+
+		// diagonal down right
+		if((u->win_o)[2] == 4){
+			for(int i = 0; i < 4; i++){
+				if((u->win_o)[1] >= u->max_cols) (u->win_o)[1] = 0;
+				if((u->win_o)[0] >= u->max_rows) break;
+				(u->board_ptr)[(u->win_o)[0]][(u->win_o)[1]] = 'X';
+				(u->win_o)[0]++;
+				(u->win_o)[1]++;
+			}
+		}
+	}
+
+
 	for(int x = 0; x < u->max_rows; x++){
 		for(int y = 0; y < u->max_cols; y++){
 			fprintf(outfile, "%c", (u->board_ptr)[x][y]);
@@ -114,9 +220,16 @@ char current_winner(board u){
 
 				// down
 				if(((u->board_ptr)[x+1][y] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x+2][y] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x+3][y] == (u->board_ptr)[x][y])){
+					
 					if((u->board_ptr)[x][y] == 'x'){
+						(u->win_x)[0] = x;
+						(u->win_x)[1] = y;
+						(u->win_x)[2] = 1;
 						x_is_winner = 1;
 					}else{
+						(u->win_o)[0] = x;
+						(u->win_o)[1] = y;
+						(u->win_o)[2] = 1;
 						o_is_winner = 1;
 					}
 					break;
@@ -135,8 +248,14 @@ char current_winner(board u){
 					}
 				}
 				if((u->board_ptr)[x][y] == 'x' && count ==4){
-					x_is_winner = 1;
+					(u->win_x)[0] = x;
+					(u->win_x)[1] = y;
+					(u->win_x)[2] = 2;
+					x_is_winner = 2;
 				}else if((u->board_ptr)[x][y] == 'o' && count ==4){
+					(u->win_o)[0] = x;
+					(u->win_o)[1] = y;
+					(u->win_o)[2] = 2;
 					o_is_winner = 1;
 				}
 			
@@ -156,8 +275,14 @@ char current_winner(board u){
 					}
 				}
 				if((u->board_ptr)[x][y] == 'x' && count ==4){
+					(u->win_x)[0] = x;
+					(u->win_x)[1] = y;
+					(u->win_x)[2] = 4;
 					x_is_winner = 1;
 				}else if((u->board_ptr)[x][y] == 'o' && count ==4){
+					(u->win_o)[0] = x;
+					(u->win_o)[1] = y;
+					(u->win_o)[2] = 4;
 					o_is_winner = 1;
 				}
 
@@ -177,8 +302,14 @@ char current_winner(board u){
 					}
 				}
 				if((u->board_ptr)[x][y] == 'x' && count ==4){
+					(u->win_x)[0] = x;
+					(u->win_x)[1] = y;
+					(u->win_x)[2] = 3;
 					x_is_winner = 1;
 				}else if((u->board_ptr)[x][y] == 'o' && count ==4){
+					(u->win_o)[0] = x;
+					(u->win_o)[1] = y;
+					(u->win_o)[2] = 3;
 					o_is_winner = 1;
 				}
 
@@ -214,6 +345,7 @@ int is_valid_move(struct move m, board u){
 }
 
 // char is_winning_move(struct move m, board u){
+// // copy board to simulate moves
 // 	return '.';
 // }
 

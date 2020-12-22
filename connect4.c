@@ -105,88 +105,91 @@ void read_in_file(FILE *infile, board u){
 }
 
 void write_out_file(FILE *outfile, board u){
+	if(current_winner(u) == 'x' || current_winner(u) == 'd'){
 
-	if((u->win_x)[0] != 0 && (u->win_x)[1] != 0){
-
-		// down
-		if((u->win_x)[2] == 1){
-			for(int i = (u->win_x)[0]; i<=(u->win_x)[0]+3; i++){
-				(u->board_ptr)[i][(u->win_x)[1]] = 'X';
+		if((u->win_x)[0] != 0 && (u->win_x)[1] != 0){
+			// down
+			if((u->win_x)[2] == 1){
+				for(int i = (u->win_x)[0]; i<=(u->win_x)[0]+3; i++){
+					(u->board_ptr)[i][(u->win_x)[1]] = 'X';
+				}
 			}
-		}
 
-		// right
-		if((u->win_x)[2] == 2){
-			for(int i = 0; i < 4; i++){
-				if((u->win_x)[1] >= u->max_cols) (u->win_x)[1] = 0;
-				(u->board_ptr)[(u->win_x)[0]][(u->win_x)[1]] = 'X';
-				(u->win_x)[1]++;
+			// right
+			if((u->win_x)[2] == 2){
+				for(int i = 0; i < 4; i++){
+					if((u->win_x)[1] >= u->max_cols) (u->win_x)[1] = 0;
+					(u->board_ptr)[(u->win_x)[0]][(u->win_x)[1]] = 'X';
+					(u->win_x)[1]++;
+				}
 			}
-		}
 
-		// diagonal up right
-		if((u->win_x)[2] == 3){
-			for(int i = 0; i < 4; i++){
-				if((u->win_x)[1] >= u->max_cols) (u->win_x)[1] = 0;
-				if((u->win_x)[0] >= u->max_rows) break;
-				(u->board_ptr)[(u->win_x)[0]][(u->win_x)[1]] = 'X';
-				(u->win_x)[0]--;
-				(u->win_x)[1]++;
+			// diagonal up right
+			if((u->win_x)[2] == 3){
+				for(int i = 0; i < 4; i++){
+					if((u->win_x)[1] >= u->max_cols) (u->win_x)[1] = 0;
+					if((u->win_x)[0] >= u->max_rows) break;
+					(u->board_ptr)[(u->win_x)[0]][(u->win_x)[1]] = 'X';
+					(u->win_x)[0]--;
+					(u->win_x)[1]++;
+				}
 			}
-		}
 
-		// diagonal down right
-		if((u->win_x)[2] == 4){
-			for(int i = 0; i < 4; i++){
-				if((u->win_x)[1] >= u->max_cols) (u->win_x)[1] = 0;
-				if((u->win_x)[0] >= u->max_rows) break;
-				(u->board_ptr)[(u->win_x)[0]][(u->win_x)[1]] = 'X';
-				(u->win_x)[0]++;
-				(u->win_x)[1]++;
+			// diagonal down right
+			if((u->win_x)[2] == 4){
+				for(int i = 0; i < 4; i++){
+					if((u->win_x)[1] >= u->max_cols) (u->win_x)[1] = 0;
+					if((u->win_x)[0] >= u->max_rows) break;
+					(u->board_ptr)[(u->win_x)[0]][(u->win_x)[1]] = 'X';
+					(u->win_x)[0]++;
+					(u->win_x)[1]++;
+				}
 			}
-		}
-	}
 
-	if(((u->win_o)[0] != 0 && (u->win_o)[1] != 0)){
-		// down
-		if((u->win_o)[2] == 1){
-			for(int i = (u->win_o)[0]; i<=(u->win_o)[0]+3; i++){
-				(u->board_ptr)[i][(u->win_o)[1]] = 'X';
-			}
-		}
-
-		// right
-		if((u->win_o)[2] == 2){
-			for(int i = 0; i < 4; i++){
-				if((u->win_o)[1] >= u->max_cols) (u->win_o)[1] = 0;
-				(u->board_ptr)[(u->win_o)[0]][(u->win_o)[1]] = 'X';
-				(u->win_o)[1]++;
-			}
-		}
-
-		// diagonal up right
-		if((u->win_o)[2] == 3){
-			for(int i = 0; i < 4; i++){
-				if((u->win_o)[1] >= u->max_cols) (u->win_o)[1] = 0;
-				if((u->win_o)[0] >= u->max_rows) break;
-				(u->board_ptr)[(u->win_o)[0]][(u->win_o)[1]] = 'X';
-				(u->win_o)[0]--;
-				(u->win_o)[1]++;
-			}
-		}
-
-		// diagonal down right
-		if((u->win_o)[2] == 4){
-			for(int i = 0; i < 4; i++){
-				if((u->win_o)[1] >= u->max_cols) (u->win_o)[1] = 0;
-				if((u->win_o)[0] >= u->max_rows) break;
-				(u->board_ptr)[(u->win_o)[0]][(u->win_o)[1]] = 'X';
-				(u->win_o)[0]++;
-				(u->win_o)[1]++;
-			}
 		}
 	}
 
+	if(current_winner(u) == 'o' || current_winner(u) == 'd'){
+		if(((u->win_o)[0] != 0 && (u->win_o)[1] != 0)){
+			// down
+			if((u->win_o)[2] == 1){
+				for(int i = (u->win_o)[0]; i<=(u->win_o)[0]+3; i++){
+					(u->board_ptr)[i][(u->win_o)[1]] = 'O';
+				}
+			}
+
+			// right
+			if((u->win_o)[2] == 2){
+				for(int i = 0; i < 4; i++){
+					if((u->win_o)[1] >= u->max_cols) (u->win_o)[1] = 0;
+					(u->board_ptr)[(u->win_o)[0]][(u->win_o)[1]] = 'O';
+					(u->win_o)[1]++;
+				}
+			}
+
+			// diagonal up right
+			if((u->win_o)[2] == 3){
+				for(int i = 0; i < 4; i++){
+					if((u->win_o)[1] >= u->max_cols) (u->win_o)[1] = 0;
+					if((u->win_o)[0] >= u->max_rows) break;
+					(u->board_ptr)[(u->win_o)[0]][(u->win_o)[1]] = 'O';
+					(u->win_o)[0]--;
+					(u->win_o)[1]++;
+				}
+			}
+
+			// diagonal down right
+			if((u->win_o)[2] == 4){
+				for(int i = 0; i < 4; i++){
+					if((u->win_o)[1] >= u->max_cols) (u->win_o)[1] = 0;
+					if((u->win_o)[0] >= u->max_rows) break;
+					(u->board_ptr)[(u->win_o)[0]][(u->win_o)[1]] = 'O';
+					(u->win_o)[0]++;
+					(u->win_o)[1]++;
+				}
+			}
+		}
+	}
 
 	for(int x = 0; x < u->max_rows; x++){
 		for(int y = 0; y < u->max_cols; y++){
@@ -221,12 +224,12 @@ char current_winner(board u){
 				// down
 				if(((u->board_ptr)[x+1][y] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x+2][y] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x+3][y] == (u->board_ptr)[x][y])){
 					
-					if((u->board_ptr)[x][y] == 'x'){
+					if((u->board_ptr)[x][y] == 'x' || (u->board_ptr)[x][y] == 'X'){
 						(u->win_x)[0] = x;
 						(u->win_x)[1] = y;
 						(u->win_x)[2] = 1;
 						x_is_winner = 1;
-					}else{
+					}else if((u->board_ptr)[x][y] == 'o' || (u->board_ptr)[x][y] == 'O'){
 						(u->win_o)[0] = x;
 						(u->win_o)[1] = y;
 						(u->win_o)[2] = 1;
@@ -235,7 +238,7 @@ char current_winner(board u){
 					break;
 				}
 
-				// // right
+				// right
 				pos_y = y;
 				count = 0;
 				for(int i = 0; i < 4; i++){
@@ -247,19 +250,19 @@ char current_winner(board u){
 						break;
 					}
 				}
-				if((u->board_ptr)[x][y] == 'x' && count ==4){
+				if(((u->board_ptr)[x][y] == 'x' || (u->board_ptr)[x][y] == 'X') && count ==4){
 					(u->win_x)[0] = x;
 					(u->win_x)[1] = y;
 					(u->win_x)[2] = 2;
 					x_is_winner = 2;
-				}else if((u->board_ptr)[x][y] == 'o' && count ==4){
+				}else if(((u->board_ptr)[x][y] == 'o' || (u->board_ptr)[x][y] == 'O') && count ==4){
 					(u->win_o)[0] = x;
 					(u->win_o)[1] = y;
 					(u->win_o)[2] = 2;
 					o_is_winner = 1;
 				}
 			
-				// // diagonal down right
+				// diagonal down right
 				pos_x = x;
 				pos_y = y;
 				count = 0;
@@ -274,12 +277,12 @@ char current_winner(board u){
 						break;
 					}
 				}
-				if((u->board_ptr)[x][y] == 'x' && count ==4){
+				if(((u->board_ptr)[x][y] == 'x' || (u->board_ptr)[x][y] == 'X') && count ==4){
 					(u->win_x)[0] = x;
 					(u->win_x)[1] = y;
 					(u->win_x)[2] = 4;
 					x_is_winner = 1;
-				}else if((u->board_ptr)[x][y] == 'o' && count ==4){
+				}else if(((u->board_ptr)[x][y] == 'o' || (u->board_ptr)[x][y] == 'O') && count ==4){
 					(u->win_o)[0] = x;
 					(u->win_o)[1] = y;
 					(u->win_o)[2] = 4;
@@ -301,12 +304,12 @@ char current_winner(board u){
 						break;
 					}
 				}
-				if((u->board_ptr)[x][y] == 'x' && count ==4){
+				if(((u->board_ptr)[x][y] == 'x' || (u->board_ptr)[x][y] == 'X') && count ==4){
 					(u->win_x)[0] = x;
 					(u->win_x)[1] = y;
 					(u->win_x)[2] = 3;
 					x_is_winner = 1;
-				}else if((u->board_ptr)[x][y] == 'o' && count ==4){
+				}else if(((u->board_ptr)[x][y] == 'o' || (u->board_ptr)[x][y] == 'O') && count ==4){
 					(u->win_o)[0] = x;
 					(u->win_o)[1] = y;
 					(u->win_o)[2] = 3;

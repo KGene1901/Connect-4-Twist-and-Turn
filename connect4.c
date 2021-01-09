@@ -6,59 +6,42 @@ struct board_structure{
 	char **board_ptr;
 	int max_rows;
 	int max_cols;
-	int num_of_x; // these two can be cut down imo
+	int num_of_x;
 	int num_of_o;
-	int *win_x;
-	int *win_o;
+	int *win_info;
 };
 
 board setup_board(){
 	board board_to_play = malloc(sizeof(board));
-	if (board_to_play == NULL){
-		exit(1);
-	}
+	if (board_to_play == NULL) exit(1);
 
 	board_to_play->max_rows = 1;
 	board_to_play->max_cols = 4;
 
-	board_to_play->win_x = (int*)malloc(3*sizeof(int));
-	if(board_to_play->win_x == NULL){
-		exit(1);
-	}
+	board_to_play->win_info = (int*)malloc(6*sizeof(int)); // {x.x, x.y, x.dir, o.x, o.y, o.dir}
+	if(board_to_play->win_info == NULL) exit(1);
 
-	(board_to_play->win_x)[0] = 0;
-	(board_to_play->win_x)[1] = 0;
-	(board_to_play->win_x)[2] = 0;
-
-	board_to_play->win_o = (int*)malloc(3*sizeof(int));
-	if(board_to_play->win_o == NULL){
-		exit(1);
-	}
-
-	(board_to_play->win_o)[0] = 0;
-	(board_to_play->win_o)[1] = 0;
-	(board_to_play->win_o)[2] = 0;
+	board_to_play->win_info[0] = -1;
+	board_to_play->win_info[1] = -1;
+	board_to_play->win_info[2] = -1;
+	board_to_play->win_info[3] = -1;
+	board_to_play->win_info[4] = -1;
+	board_to_play->win_info[5] = -1;
 
 	board_to_play->board_ptr = (char**)malloc((board_to_play->max_rows) * sizeof(char*)); // min 1 row 
-	if(board_to_play->board_ptr == NULL){
-		exit(1);
-	}
+	if(board_to_play->board_ptr == NULL) exit(1);
 
 	(board_to_play->board_ptr)[0] = (char*)malloc((board_to_play->max_cols) * sizeof(char)); // min 4 cols
-	if((board_to_play->board_ptr)[0] == NULL){
-		exit(1);
-	}
+	if((board_to_play->board_ptr)[0] == NULL) exit(1);
 	
 	return board_to_play;
 }
 
 void cleanup_board(board u){
-	// for(int x = 0; x < u->max_rows; x++){
-	// 	free(u->board_ptr[x]);
-	// }
-	free(u->board_ptr);
+	free(u->win_info);
+	// free(u->win_o);
+	for(int i = 0; i < u->max_rows; i++) free(u->board_ptr[i]);
 	free(u);
-	// need to fix errors showing on Valgrind
 }
 
 void read_in_file(FILE *infile, board u){
@@ -72,9 +55,7 @@ void read_in_file(FILE *infile, board u){
 	while(!feof(infile)){
 		if(curr_row == u->max_rows){
 			u->board_ptr = (char**)realloc(u->board_ptr, ((u->max_rows)+1)*sizeof(*(u->board_ptr)));
-			if(u->board_ptr == NULL){
-				exit(1);
-			}
+			if(u->board_ptr == NULL) exit(1);
 			u->max_rows++;
 			(u->board_ptr)[curr_row] = (char*)malloc((u->max_cols)*sizeof(char));
 		}
@@ -82,9 +63,7 @@ void read_in_file(FILE *infile, board u){
 		if(buffer[count] == '.' || buffer[count] == 'x' || buffer[count] == 'o'){
 			if(curr_col == u->max_cols){
 				(u->board_ptr)[curr_row] = (char*)realloc((u->board_ptr)[curr_row], ((u->max_cols)+1)*sizeof(char));
-				if((u->board_ptr)[curr_row] == NULL){
-					exit(1);
-				}
+				if((u->board_ptr)[curr_row] == NULL) exit(1);
 				u->max_cols++;
 			}
 			(u->board_ptr)[curr_row][curr_col] = buffer[count];
@@ -105,87 +84,88 @@ void read_in_file(FILE *infile, board u){
 }
 
 void write_out_file(FILE *outfile, board u){
-	if(current_winner(u) == 'x' || current_winner(u) == 'd'){
 
-		if((u->win_x)[0] != 0 && (u->win_x)[1] != 0){
+	char cur_winner = current_winner(u);
+	if(cur_winner == 'x' || cur_winner == 'd'){
+		if((u->win_info)[0] != -1 && (u->win_info)[1] != -1 && (u->win_info)[2] != -1){
 			// down
-			if((u->win_x)[2] == 1){
-				for(int i = (u->win_x)[0]; i<=(u->win_x)[0]+3; i++){
-					(u->board_ptr)[i][(u->win_x)[1]] = 'X';
+			if((u->win_info)[2] == 1){
+				for(int i = (u->win_info)[0]; i<=(u->win_info)[0]+3; i++){
+					(u->board_ptr)[i][(u->win_info)[1]] = 'X';
 				}
 			}
 
 			// right
-			if((u->win_x)[2] == 2){
+			if((u->win_info)[2] == 2){
 				for(int i = 0; i < 4; i++){
-					if((u->win_x)[1] >= u->max_cols) (u->win_x)[1] = 0;
-					(u->board_ptr)[(u->win_x)[0]][(u->win_x)[1]] = 'X';
-					(u->win_x)[1]++;
+					if((u->win_info)[1] >= u->max_cols) (u->win_info)[1] = 0;
+					(u->board_ptr)[(u->win_info)[0]][(u->win_info)[1]] = 'X';
+					(u->win_info)[1]++;
 				}
 			}
 
 			// diagonal up right
-			if((u->win_x)[2] == 3){
+			if((u->win_info)[2] == 3){
 				for(int i = 0; i < 4; i++){
-					if((u->win_x)[1] >= u->max_cols) (u->win_x)[1] = 0;
-					if((u->win_x)[0] >= u->max_rows) break;
-					(u->board_ptr)[(u->win_x)[0]][(u->win_x)[1]] = 'X';
-					(u->win_x)[0]--;
-					(u->win_x)[1]++;
+					if((u->win_info)[1] >= u->max_cols) (u->win_info)[1] = 0;
+					if((u->win_info)[0] >= u->max_rows) break;
+					(u->board_ptr)[(u->win_info)[0]][(u->win_info)[1]] = 'X';
+					(u->win_info)[0]--;
+					(u->win_info)[1]++;
 				}
 			}
 
 			// diagonal down right
-			if((u->win_x)[2] == 4){
+			if((u->win_info)[2] == 4){
 				for(int i = 0; i < 4; i++){
-					if((u->win_x)[1] >= u->max_cols) (u->win_x)[1] = 0;
-					if((u->win_x)[0] >= u->max_rows) break;
-					(u->board_ptr)[(u->win_x)[0]][(u->win_x)[1]] = 'X';
-					(u->win_x)[0]++;
-					(u->win_x)[1]++;
+					if((u->win_info)[1] >= u->max_cols) (u->win_info)[1] = 0;
+					if((u->win_info)[0] >= u->max_rows) break;
+					(u->board_ptr)[(u->win_info)[0]][(u->win_info)[1]] = 'X';
+					(u->win_info)[0]++;
+					(u->win_info)[1]++;
 				}
 			}
 
 		}
 	}
 
-	if(current_winner(u) == 'o' || current_winner(u) == 'd'){
-		if(((u->win_o)[0] != 0 && (u->win_o)[1] != 0)){
+	if(cur_winner == 'o' || cur_winner == 'd'){
+		if(((u->win_info)[3] != -1 && (u->win_info)[4] != -1) && (u->win_info)[5] != -1){
 			// down
-			if((u->win_o)[2] == 1){
-				for(int i = (u->win_o)[0]; i<=(u->win_o)[0]+3; i++){
-					(u->board_ptr)[i][(u->win_o)[1]] = 'O';
+			if((u->win_info)[5] == 1){
+				for(int i = (u->win_info)[3]; i<=(u->win_info)[3]+3; i++){
+					(u->board_ptr)[i][(u->win_info)[4]] = 'O';
 				}
 			}
 
 			// right
-			if((u->win_o)[2] == 2){
+			if((u->win_info)[5] == 2){
 				for(int i = 0; i < 4; i++){
-					if((u->win_o)[1] >= u->max_cols) (u->win_o)[1] = 0;
-					(u->board_ptr)[(u->win_o)[0]][(u->win_o)[1]] = 'O';
-					(u->win_o)[1]++;
+					if((u->win_info)[4] >= u->max_cols) (u->win_info)[4] = 0;
+					(u->board_ptr)[(u->win_info)[3]][(u->win_info)[4]] = 'O';
+					(u->win_info)[4]++;
 				}
 			}
 
 			// diagonal up right
-			if((u->win_o)[2] == 3){
+			if((u->win_info)[5] == 3){
 				for(int i = 0; i < 4; i++){
-					if((u->win_o)[1] >= u->max_cols) (u->win_o)[1] = 0;
-					if((u->win_o)[0] >= u->max_rows) break;
-					(u->board_ptr)[(u->win_o)[0]][(u->win_o)[1]] = 'O';
-					(u->win_o)[0]--;
-					(u->win_o)[1]++;
+					if((u->win_info)[4] >= u->max_cols) (u->win_info)[4] = 0;
+					if((u->win_info)[3] >= u->max_rows) break;
+					(u->board_ptr)[(u->win_info)[3]][(u->win_info)[4]] = 'O';
+					(u->win_info)[3]--;
+					(u->win_info)[4]++;
 				}
 			}
 
 			// diagonal down right
-			if((u->win_o)[2] == 4){
+			if((u->win_info)[5] == 4){
 				for(int i = 0; i < 4; i++){
-					if((u->win_o)[1] >= u->max_cols) (u->win_o)[1] = 0;
-					if((u->win_o)[0] >= u->max_rows) break;
-					(u->board_ptr)[(u->win_o)[0]][(u->win_o)[1]] = 'O';
-					(u->win_o)[0]++;
-					(u->win_o)[1]++;
+					if((u->win_info)[4] >= u->max_cols) (u->win_info)[4] = 0;
+					if((u->win_info)[3] >= u->max_rows) break;
+					(u->board_ptr)[(u->win_info)[3]][(u->win_info)[4]] = 'O';
+					(u->win_info)[3]++;
+					(u->win_info)[4]++;
 				}
 			}
 		}
@@ -222,20 +202,29 @@ char current_winner(board u){
 				if((x_is_winner && (u->board_ptr)[x][y] == 'x') || (o_is_winner && (u->board_ptr)[x][y] == 'o')) continue;
 
 				// down
-				if(((u->board_ptr)[x+1][y] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x+2][y] == (u->board_ptr)[x][y]) && ((u->board_ptr)[x+3][y] == (u->board_ptr)[x][y])){
-					
-					if((u->board_ptr)[x][y] == 'x' || (u->board_ptr)[x][y] == 'X'){
-						(u->win_x)[0] = x;
-						(u->win_x)[1] = y;
-						(u->win_x)[2] = 1;
-						x_is_winner = 1;
-					}else if((u->board_ptr)[x][y] == 'o' || (u->board_ptr)[x][y] == 'O'){
-						(u->win_o)[0] = x;
-						(u->win_o)[1] = y;
-						(u->win_o)[2] = 1;
-						o_is_winner = 1;
+				pos_x = x;
+				count = 0;
+				for(int i = 0; i < 4; i++){
+					if(pos_x >= u->max_rows) break;
+					if((u->board_ptr)[pos_x][y] == (u->board_ptr)[x][y]){
+						count++;
+						pos_x++;
+					}else{
+						break;
 					}
-					break;
+				}
+				if(((u->board_ptr)[x][y] == 'x' || (u->board_ptr)[x][y] == 'X') && count ==4){
+					(u->win_info)[0] = x;
+					(u->win_info)[1] = y;
+					(u->win_info)[2] = 1;
+					x_is_winner = 1;
+					continue;
+				}else if(((u->board_ptr)[x][y] == 'o' || (u->board_ptr)[x][y] == 'O') && count ==4){
+					(u->win_info)[3] = x;
+					(u->win_info)[4] = y;
+					(u->win_info)[5] = 1;
+					o_is_winner = 1;
+					continue;
 				}
 
 				// right
@@ -251,15 +240,17 @@ char current_winner(board u){
 					}
 				}
 				if(((u->board_ptr)[x][y] == 'x' || (u->board_ptr)[x][y] == 'X') && count ==4){
-					(u->win_x)[0] = x;
-					(u->win_x)[1] = y;
-					(u->win_x)[2] = 2;
-					x_is_winner = 2;
+					(u->win_info)[0] = x;
+					(u->win_info)[1] = y;
+					(u->win_info)[2] = 2;
+					x_is_winner = 1;
+					continue;
 				}else if(((u->board_ptr)[x][y] == 'o' || (u->board_ptr)[x][y] == 'O') && count ==4){
-					(u->win_o)[0] = x;
-					(u->win_o)[1] = y;
-					(u->win_o)[2] = 2;
+					(u->win_info)[3] = x;
+					(u->win_info)[4] = y;
+					(u->win_info)[5] = 2;
 					o_is_winner = 1;
+					continue;
 				}
 			
 				// diagonal down right
@@ -278,15 +269,17 @@ char current_winner(board u){
 					}
 				}
 				if(((u->board_ptr)[x][y] == 'x' || (u->board_ptr)[x][y] == 'X') && count ==4){
-					(u->win_x)[0] = x;
-					(u->win_x)[1] = y;
-					(u->win_x)[2] = 4;
+					(u->win_info)[0] = x;
+					(u->win_info)[1] = y;
+					(u->win_info)[2] = 4;
 					x_is_winner = 1;
+					continue;
 				}else if(((u->board_ptr)[x][y] == 'o' || (u->board_ptr)[x][y] == 'O') && count ==4){
-					(u->win_o)[0] = x;
-					(u->win_o)[1] = y;
-					(u->win_o)[2] = 4;
+					(u->win_info)[3] = x;
+					(u->win_info)[4] = y;
+					(u->win_info)[5] = 4;
 					o_is_winner = 1;
+					continue;
 				}
 
 				// diagonal up right
@@ -305,15 +298,17 @@ char current_winner(board u){
 					}
 				}
 				if(((u->board_ptr)[x][y] == 'x' || (u->board_ptr)[x][y] == 'X') && count ==4){
-					(u->win_x)[0] = x;
-					(u->win_x)[1] = y;
-					(u->win_x)[2] = 3;
+					(u->win_info)[0] = x;
+					(u->win_info)[1] = y;
+					(u->win_info)[2] = 3;
 					x_is_winner = 1;
+					continue;
 				}else if(((u->board_ptr)[x][y] == 'o' || (u->board_ptr)[x][y] == 'O') && count ==4){
-					(u->win_o)[0] = x;
-					(u->win_o)[1] = y;
-					(u->win_o)[2] = 3;
+					(u->win_info)[3] = x;
+					(u->win_info)[4] = y;
+					(u->win_info)[5] = 3;
 					o_is_winner = 1;
+					continue;
 				}
 
 			}
@@ -333,26 +328,66 @@ char current_winner(board u){
 
 struct move read_in_move(board u){
 	struct move player_move;
+
 	printf("Player %c enter column to place your token: ",next_player(u)); //Do not edit this line
-	scanf("%d", &(player_move.column));
+	if(scanf("%d", &(player_move.column)) != 1) exit(1);
 	printf("Player %c enter row to rotate: ",next_player(u)); // Do not edit this line
-	scanf("%d", &(player_move.row));
-	
+	if(scanf("%d", &(player_move.row)) != 1) exit(1);
+
 	return player_move;
 }
 
 int is_valid_move(struct move m, board u){
-	if (m.column < 1 || m.column > u->max_cols || m.row < -(u->max_rows) || m.row > u->max_rows) return 0;
+	if (m.column < 1 || m.column > u->max_cols || m.row < -(u->max_rows) || m.row > u->max_rows) exit(1);
 	if ((u->board_ptr)[0][(m.column)-1] == '.') return 1;
 	exit(1);
 }
 
-// char is_winning_move(struct move m, board u){
-// // copy board to simulate moves
-// 	return '.';
-// }
+char is_winning_move(struct move m, board u){
 
-// this works but neeeds some code clean up 
+	char **board_copy = (char**)malloc((u->max_rows) * sizeof(char*)+1);
+	if(board_copy == NULL) exit(1);
+
+	for(int i = 0; i < u->max_rows; i++){
+		board_copy[i] = (char*)malloc((u->max_cols) * sizeof(char)+1);
+		if(board_copy[i] == NULL) exit(1);
+	}
+
+	for(int x = 0; x < u->max_rows; x++){
+		for(int y = 0; y < u->max_cols; y++){
+			board_copy[x][y] = (u->board_ptr)[x][y];
+		}
+	}
+
+	play_move(m, u);
+	char simulated_winner = current_winner(u);
+
+	// resets board sturcture to state before move was played
+	for(int x = 0; x < u->max_rows; x++){
+		for(int y = 0; y < u->max_cols; y++){
+			(u->board_ptr)[x][y] = board_copy[x][y];
+		}
+	}
+
+	for(int j = 0; j < 6; j++){
+		(u->win_info)[j] = -1;
+	}
+
+	if(next_player(u) == 'x'){
+		u->num_of_o --;
+	}else if(next_player(u) == 'o'){
+		u->num_of_x --;
+	}
+
+	for(int i = 0; i < u->max_rows; i++){
+		free(board_copy[i]);
+	}
+
+	free(board_copy);
+
+	return simulated_winner;
+}
+
 void play_move(struct move m, board u){
 	// rows 1,2 ... bottom to top
 	// column 1,2 ... left to right
@@ -415,5 +450,3 @@ void play_move(struct move m, board u){
 		}
 	}
 }
-
-

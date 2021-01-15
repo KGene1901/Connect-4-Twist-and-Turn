@@ -12,7 +12,7 @@ struct board_structure{
 };
 
 board setup_board(){
-	board board_to_play = malloc(sizeof(board));
+	board board_to_play = malloc(sizeof(struct board_structure));
 	if (board_to_play == NULL) exit(1);
 
 	board_to_play->max_rows = 1;
@@ -31,7 +31,7 @@ board setup_board(){
 	board_to_play->board_ptr = (char**)malloc((board_to_play->max_rows) * sizeof(char*)); // min 1 row 
 	if(board_to_play->board_ptr == NULL) exit(1);
 
-	(board_to_play->board_ptr)[0] = (char*)malloc((board_to_play->max_cols) * sizeof(char)); // min 4 cols
+	(board_to_play->board_ptr)[0] = (char*)malloc((board_to_play->max_cols) * sizeof(char)+1); // min 4 cols
 	if((board_to_play->board_ptr)[0] == NULL) exit(1);
 	
 	return board_to_play;
@@ -39,13 +39,13 @@ board setup_board(){
 
 void cleanup_board(board u){
 	free(u->win_info);
-	// free(u->win_o);
-	for(int i = 0; i < u->max_rows; i++) free(u->board_ptr[i]);
+	for(int i = 0; i <= u->max_rows; i++) free(u->board_ptr[i]);
+	free(u->board_ptr);
 	free(u);
 }
 
 void read_in_file(FILE *infile, board u){
-	char buffer[520]; // need to realloc this somewhere just in case
+	char symbol[2];
 	int count = 0;
 	int curr_row = 0;
 	int curr_col = 0;
@@ -54,22 +54,22 @@ void read_in_file(FILE *infile, board u){
 	
 	while(!feof(infile)){
 		if(curr_row == u->max_rows){
-			u->board_ptr = (char**)realloc(u->board_ptr, ((u->max_rows)+1)*sizeof(*(u->board_ptr)));
+			u->board_ptr = (char**)realloc(u->board_ptr, ((u->max_rows)+1)*sizeof(char*));
 			if(u->board_ptr == NULL) exit(1);
 			u->max_rows++;
-			(u->board_ptr)[curr_row] = (char*)malloc((u->max_cols)*sizeof(char));
+			(u->board_ptr)[curr_row] = (char*)malloc((u->max_cols)*sizeof(char)+1);
 		}
-		fscanf(infile, "%c", &buffer[count]);
-		if(buffer[count] == '.' || buffer[count] == 'x' || buffer[count] == 'o'){
+		fscanf(infile, "%c", &symbol[0]);
+		if(symbol[0] == '.' || symbol[0] == 'x' || symbol[0] == 'o'){
 			if(curr_col == u->max_cols){
-				(u->board_ptr)[curr_row] = (char*)realloc((u->board_ptr)[curr_row], ((u->max_cols)+1)*sizeof(char));
+				(u->board_ptr)[curr_row] = (char*)realloc((u->board_ptr)[curr_row], ((u->max_cols))*sizeof(char)+1);
 				if((u->board_ptr)[curr_row] == NULL) exit(1);
 				u->max_cols++;
 			}
-			(u->board_ptr)[curr_row][curr_col] = buffer[count];
-			if(buffer[count] == 'x'){
+			(u->board_ptr)[curr_row][curr_col] = symbol[0];
+			if(symbol[0] == 'x'){
 				(u->num_of_x)++;
-			}else if(buffer[count] == 'o'){
+			}else if(symbol[0] == 'o'){
 				(u->num_of_o)++;
 			}
 			curr_col++;
@@ -345,7 +345,7 @@ int is_valid_move(struct move m, board u){
 
 char is_winning_move(struct move m, board u){
 
-	char **board_copy = (char**)malloc((u->max_rows) * sizeof(char*)+1);
+	char **board_copy = (char**)malloc((u->max_rows) * sizeof(char*));
 	if(board_copy == NULL) exit(1);
 
 	for(int i = 0; i < u->max_rows; i++){
@@ -439,7 +439,7 @@ void play_move(struct move m, board u){
 				if((u->board_ptr)[x][y] == 'x' || (u->board_ptr)[x][y] == 'o'){
 					current_token = (u->board_ptr)[x][y];
 					possible_row = x;
-					while(((u->board_ptr)[x+count][y] == '.') && (x+count < u->max_rows)){
+					while(((x+count < u->max_rows) && (u->board_ptr)[x+count][y] == '.')){
 						(u->board_ptr)[x][y] = '.';
 						possible_row = x+count;
 						count++;
